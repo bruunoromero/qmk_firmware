@@ -5,32 +5,6 @@
 #include QMK_KEYBOARD_H
 
 // ---------------------------------------------------------------------------
-// Custom keycodes for macros
-// ---------------------------------------------------------------------------
-enum custom_keycodes {
-    RETOOL_HDR = QK_USER,  // "x-retool-acting-account-id"
-    RETOOL_ID,             // "{{actingAccountSelector1.actingAccountId}}"
-    RETOOL_NID,            // "{{!actingAccountSelector1.actingAccountId}}"
-};
-
-// ---------------------------------------------------------------------------
-// Tap Dance declarations
-// ---------------------------------------------------------------------------
-enum tap_dances {
-    TD_CAPS_LSFT,  // Tap = CapsLock, Hold = LShift
-    TD_RBRC_MO3,   // Tap = ], Hold = MO(3)
-};
-
-// Forward declare tap dance MO(3) functions
-void td_mo3_finished(tap_dance_state_t *state, void *user_data);
-void td_mo3_reset(tap_dance_state_t *state, void *user_data);
-
-tap_dance_action_t tap_dance_actions[] = {
-    [TD_CAPS_LSFT] = ACTION_TAP_DANCE_DOUBLE(KC_CAPS, KC_LSFT),
-    [TD_RBRC_MO3]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_mo3_finished, td_mo3_reset),
-};
-
-// ---------------------------------------------------------------------------
 // Layer names
 // ---------------------------------------------------------------------------
 enum sofle_layers {
@@ -85,11 +59,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *            `----------------------------------'           '------''---------------------------'
  */
 [_SYMBOLS] = LAYOUT(
-  _______,  RM_TOGG, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                       XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+  _______,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                       XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   _______,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                           KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    XXXXXXX,
   _______,  S(KC_1), S(KC_2), S(KC_3), S(KC_4), S(KC_5),                       S(KC_6), S(KC_7), S(KC_8), S(KC_9), S(KC_0), S(KC_BSLS),
   _______,  KC_EQL,  KC_MINS, S(KC_EQL), S(KC_LBRC), S(KC_RBRC), XXXXXXX, XXXXXXX, KC_LBRC, KC_RBRC, KC_SCLN, S(KC_SCLN), KC_BSLS, KC_RSFT,
-                      _______, _______, XXXXXXX, XXXXXXX, KC_ENT,          KC_BSPC, RETOOL_HDR, RETOOL_ID, RETOOL_NID, XXXXXXX
+                      _______, _______, _______, XXXXXXX, KC_ENT,          KC_BSPC, _______, _______, _______, XXXXXXX
 ),
 
 /*
@@ -177,47 +151,27 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #endif
 
 // ---------------------------------------------------------------------------
-// Macros
+// Encoder fallback (if ENCODER_MAP is not working)
 // ---------------------------------------------------------------------------
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case RETOOL_HDR:
-            if (record->event.pressed) {
-                SEND_STRING("x-retool-acting-account-id");
-            }
-            return false;
-        case RETOOL_ID:
-            if (record->event.pressed) {
-                SEND_STRING("{{actingAccountSelector1.actingAccountId}}");
-            }
-            return false;
-        case RETOOL_NID:
-            if (record->event.pressed) {
-                SEND_STRING("{{!actingAccountSelector1.actingAccountId}}");
-            }
-            return false;
+#if !defined(ENCODER_MAP_ENABLE)
+bool encoder_update_user(uint8_t index, bool clockwise) {
+    if (index == 0) {
+        if (clockwise) {
+            tap_code(KC_MFFD);
+        } else {
+            tap_code(KC_MRWD);
+        }
+    } else if (index == 1) {
+        if (clockwise) {
+            tap_code(KC_VOLU);
+        } else {
+            tap_code(KC_VOLD);
+        }
     }
-    return true;
+    return false;
 }
+#endif
 
-// ---------------------------------------------------------------------------
-// Tap Dance: TD_RBRC_MO3 (Tap = ], Hold = MO(3))
-// ---------------------------------------------------------------------------
-void td_mo3_finished(tap_dance_state_t *state, void *user_data) {
-    if (state->pressed) {
-        // Held: activate layer 3
-        layer_on(_EXTEND);
-    } else {
-        // Tapped: send ]
-        tap_code(KC_RBRC);
-    }
-}
-
-void td_mo3_reset(tap_dance_state_t *state, void *user_data) {
-    if (state->pressed) {
-        layer_off(_EXTEND);
-    }
-}
 
 // ---------------------------------------------------------------------------
 // OLED
