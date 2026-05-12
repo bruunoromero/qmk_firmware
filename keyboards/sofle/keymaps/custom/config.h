@@ -8,5 +8,5 @@
 #define SPLIT_MODS_ENABLE
 #define USB_POLLING_INTERVAL_MS 1
 
-// Encoder: override resolution (try 4 if 2 doesn't register turns)
+#undef ENCODER_RESOLUTION
 #define ENCODER_RESOLUTION 4
